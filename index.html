@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>無聊發酵機 Boredom Fermenter｜孩子喊無聊時，把無聊變成一場創意任務</title>
+<meta name="description" content="孩子喊「我好無聊」時，AI 把無聊發酵成一場創意任務，用家裡現有的東西玩起來。零後端、零安裝，打開就能用。">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header>
+  <h1>🫙 無聊發酵機 <span lang="en">Boredom Fermenter</span></h1>
+  <p class="subtitle">孩子喊「我好無聊」時，不給答案，只當陪伴者——把無聊發酵成一場創意任務，用家裡現有的東西玩起來。</p>
+  <div class="origin">
+    <strong>靈感來自真實經驗：</strong>客廳有一個「靈感百寶箱」，裡面只有黏土、廢紙盒、幾顆球、彩繪筆和積木。
+    孩子喊無聊時，大人不給答案，只陪著問問題，無聊就變成了動力。
+    這個點子來自 Otis 的國語日報家庭版文章〈孩子沒3C就喊無聊〉，沒有編造其他家庭細節。
+  </div>
+</header>
+
+<main>
+  <section aria-label="設定">
+    <h2>1. 先說說今天的狀況</h2>
+
+    <label for="age">孩子年齡</label>
+    <select id="age">
+      <option value="3-4">3–4 歲</option>
+      <option value="4-6" selected>4–6 歲</option>
+      <option value="7-9">7–9 歲</option>
+    </select>
+
+    <label for="time">可用時間</label>
+    <div class="radio-row" id="timeRow">
+      <label><input type="radio" name="time" value="15"> 15 分鐘</label>
+      <label><input type="radio" name="time" value="30" checked> 30 分鐘</label>
+      <label><input type="radio" name="time" value="60"> 60 分鐘</label>
+    </div>
+
+    <fieldset>
+      <legend>家裡現有的材料（只會用你勾的）</legend>
+      <div class="chips" id="materials"></div>
+      <p class="muted">預設勾選靈感百寶箱的 5 樣：黏土、廢紙盒、球、彩繪筆、積木。至少勾 2 樣。</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>今天的心情／能量</legend>
+      <div class="radio-row">
+        <label><input type="radio" name="energy" value="move" checked> 想動一動 🏃</label>
+        <label><input type="radio" name="energy" value="calm"> 想靜靜做 🎨</label>
+        <label><input type="radio" name="energy" value="any"> 不一定 🤷</label>
+      </div>
+    </fieldset>
+
+    <label for="seed">任務種子（選填，同一種子會出同一張任務卡）</label>
+    <input type="number" id="seed" placeholder="留空就隨機，例如 482910" min="100000" max="999999">
+    <p class="muted" id="poolInfo"></p>
+
+    <div class="actions">
+      <button class="primary" id="btnFerment" type="button">🫙 開始發酵</button>
+      <button class="secondary" id="btnAgain" type="button" disabled>再發酵一次</button>
+    </div>
+  </section>
+
+  <section id="taskSection" aria-label="任務卡" hidden>
+    <h2>2. 今天的任務卡</h2>
+    <p class="meta" id="taskMeta"></p>
+    <h3 class="task-title" id="taskTitle"></h3>
+    <p id="taskStory"></p>
+    <h3>需要材料</h3>
+    <p id="taskMaterials"></p>
+    <h3>步驟</h3>
+    <ol class="steps" id="taskSteps"></ol>
+    <div class="callout">
+      <strong>陪伴者提示（家長不給答案，只問問題）</strong>
+      <p id="taskParent" style="margin:6px 0 0"></p>
+    </div>
+    <div class="warning" style="margin-top:10px">
+      <strong>安全提醒</strong>
+      <p id="taskSafety" style="margin:6px 0 0"></p>
+    </div>
+
+    <h3>計時器</h3>
+    <div class="timer" id="timerDisplay">30:00</div>
+    <div class="progress"><div id="timerBar"></div></div>
+    <div class="actions">
+      <button class="primary" id="btnTimer" type="button">開始計時</button>
+      <button class="ghost" id="btnTimerReset" type="button">重設計時器</button>
+    </div>
+    <p class="muted" id="timerStatus">還沒開始。時間到會顯示「時間到！」，不會發出聲音。</p>
+
+    <div class="actions">
+      <button class="secondary" id="btnFav" type="button">⭐ 收藏這個任務</button>
+      <button class="ghost" id="btnPrint" type="button">🖨️ 列印任務卡</button>
+    </div>
+    <p class="muted" id="favStatus"></p>
+  </section>
+
+  <section aria-label="AI 模式">
+    <h2>3. 想換個口味？選填的 AI 模式</h2>
+    <p>沒有 Key 也能用：上面的本地組合引擎已經可以完整運作。AI 模式只是「再請模型幫忙想一個」，不是必要條件。</p>
+    <details>
+      <summary>開啟 AI 模式設定（Key 只存在你的瀏覽器）</summary>
+      <label for="provider">供應商</label>
+      <select id="provider">
+        <option value="mixroute">MixRoute（OpenAI 相容，https://api.mixroute.ai/v1）</option>
+        <option value="gemini">Gemini（Google AI Studio）</option>
+      </select>
+      <label for="model">模型</label>
+      <input type="text" id="model" value="gemini-3-flash-preview">
+      <p class="muted">MixRoute 請填 MixRoute 模型 ID，例如 gemini-3-flash-preview；Gemini 請填 Gemini 模型名稱。切換供應商時，模型欄位不會自動改，請自行確認。</p>
+      <label for="apiKey">API Key（只存 localStorage，絕不寫入檔案、不上傳到我們的伺服器——本作品根本沒有伺服器）</label>
+      <input type="password" id="apiKey" placeholder="貼上你的 Key，存在這個瀏覽器裡" autocomplete="off">
+      <div class="actions">
+        <button class="secondary" id="btnSaveKey" type="button">儲存 Key 到本機瀏覽器</button>
+        <button class="ghost" id="btnClearKey" type="button">清除已存的 Key</button>
+      </div>
+      <p class="muted" id="keyStatus">尚未儲存 Key。</p>
+      <div class="actions">
+        <button class="primary" id="btnAI" type="button">✨ 用 AI 再發酵一個任務</button>
+      </div>
+      <p class="muted" id="aiStatus"></p>
+      <p class="muted">注意：Key 會直接從你的瀏覽器送到你選的供應商（MixRoute 或 Google），請自行留意該供應商的收費與使用條款。AI 生成的任務仍只會使用你勾選的材料，若模型回傳的材料超出勾選範圍，程式會先過濾、再顯示。</p>
+    </details>
+  </section>
+
+  <section aria-label="收藏">
+    <h2>4. 收藏的任務</h2>
+    <p class="muted">存在這個瀏覽器的 localStorage，關掉網頁還在，換一台電腦就看不到。</p>
+    <div id="favList"></div>
+    <div class="actions">
+      <button class="ghost" id="btnClearFav" type="button">清除全部收藏</button>
+    </div>
+  </section>
+
+  <section aria-label="說明">
+    <h2>怎麼玩</h2>
+    <ol>
+      <li>勾選家裡現有的材料，選時間和心情，按「開始發酵」。</li>
+      <li>照著任務卡玩 15–60 分鐘，大人不給答案，只問問題。</li>
+      <li>不喜歡這張卡？按「再發酵一次」換一張。喜歡就收藏起來，下次直接拿出來玩。</li>
+    </ol>
+    <p class="muted">使用情境：孩子喊「我好無聊」、3C 時間結束後的空白時間、雨天待在家裡、等出門前的空檔。需家長陪同，任務只是建議玩法，請依孩子的實際狀況調整。</p>
+  </section>
+</main>
+
+<footer>
+  無聊發酵機 Boredom Fermenter · 作者 Otis Lin（一人團隊：構想、實作、測試皆為本人）·
+  參加 OPEN LAB AI Build Challenge，投稿截止 2026-11-27 23:59（台北時間），決賽 2026-12-05 台北瓶蓋工廠。
+  完整說明請見 README.md。
+</footer>
+
+<script src="engine.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
